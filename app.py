@@ -14,12 +14,14 @@ def webhook():
 
     for event in data.get("events", []):
 
+        # รับเฉพาะข้อความ
         if event.get("type") == "message":
 
             if event["message"]["type"] == "text":
 
                 msg = event["message"]["text"]
 
+                # รับเฉพาะข้อความที่ขึ้นต้นด้วย #ตรวจ
                 if msg.startswith("#ตรวจ"):
 
                     branch = ""
@@ -37,12 +39,12 @@ def webhook():
                         elif line.startswith("รายละเอียด:"):
                             detail = line.replace("รายละเอียด:", "").strip()
 
-                    print("========== REPORT ==========")
-                    print("เวลา:", datetime.now())
+                    print("===== REPORT =====")
+                    print("เวลา =", datetime.now())
                     print("สาขา =", branch)
                     print("สถานะ =", status)
                     print("รายละเอียด =", detail)
-                    print("===========================")
+                    print("==================")
 
     return "OK"
 
