@@ -1,18 +1,50 @@
-branch = ""
-status = ""
-detail = ""
+from flask import Flask, request
+from datetime import datetime
 
-for line in msg.split("\n"):
+app = Flask(__name__)
 
-    if line.startswith("สาขา:"):
-        branch = line.replace("สาขา:", "").strip()
+@app.route("/")
+def home():
+    return "LINE Bot Running"
 
-    elif line.startswith("สถานะ:"):
-        status = line.replace("สถานะ:", "").strip()
+@app.route("/webhook", methods=["POST"])
+def webhook():
 
-    elif line.startswith("รายละเอียด:"):
-        detail = line.replace("รายละเอียด:", "").strip()
+    data = request.json
 
-print("สาขา =", branch)
-print("สถานะ =", status)
-print("รายละเอียด =", detail)
+    for event in data.get("events", []):
+
+        if event.get("type") == "message":
+
+            if event["message"]["type"] == "text":
+
+                msg = event["message"]["text"]
+
+                if msg.startswith("#ตรวจ"):
+
+                    branch = ""
+                    status = ""
+                    detail = ""
+
+                    for line in msg.split("\n"):
+
+                        if line.startswith("สาขา:"):
+                            branch = line.replace("สาขา:", "").strip()
+
+                        elif line.startswith("สถานะ:"):
+                            status = line.replace("สถานะ:", "").strip()
+
+                        elif line.startswith("รายละเอียด:"):
+                            detail = line.replace("รายละเอียด:", "").strip()
+
+                    print("========== REPORT ==========")
+                    print("เวลา:", datetime.now())
+                    print("สาขา =", branch)
+                    print("สถานะ =", status)
+                    print("รายละเอียด =", detail)
+                    print("===========================")
+
+    return "OK"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
