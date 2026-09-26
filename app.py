@@ -1,4 +1,25 @@
-if msg.startswith("#ตรวจ"):
+from flask import Flask, request
+from datetime import datetime
+import openpyxl
+import os
+
+app = Flask(__name__)
+
+EXCEL_FILE = "LP_Report.xlsx" 
+
+@app.route("/")
+def home():
+    return "LINE Bot Running"
+
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    data = request.json
+    for event in data.get("events", []):
+        if event.get("type") == "message":
+            if event["message"]["type"] == "text":
+                msg = event["message"]["text"]
+                
+                if msg.startswith("#ตรวจ"):
                     branch = ""
                     status = ""
                     detail = ""
@@ -20,9 +41,15 @@ if msg.startswith("#ตรวจ"):
                         wb = openpyxl.load_workbook(EXCEL_FILE)
                         ws = wb.active
                         
+                        # เพิ่มข้อมูลลงในแถวใหม่
                         ws.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), branch, status, detail])
                         
                         wb.save(EXCEL_FILE)
                         print("✅ บันทึกลง Excel สำเร็จ!")
                     else:
                         print(f"❌ ไม่พบไฟล์ Excel ชื่อ: {EXCEL_FILE}")
+                        
+    return "OK"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
