@@ -1,4 +1,3 @@
-Python
 from flask import Flask, request, send_file
 from datetime import datetime
 import openpyxl
@@ -42,13 +41,12 @@ def webhook():
         if event.get("type") == "message":
             if event["message"]["type"] == "text":
                 msg = event["message"]["text"]
-
-                # ตรวจสอบคำขึ้นต้น
+                
                 if msg.startswith("#ตรวจ"):
                     branch = ""
                     status = ""
                     detail = ""
-
+                    
                     for line in msg.split("\n"):
                         if line.startswith("สาขา:"):
                             branch = line.replace("สาขา:", "").strip()
@@ -56,8 +54,8 @@ def webhook():
                             status = line.replace("สถานะ:", "").strip()
                         elif line.startswith("รายละเอียด:"):
                             detail = line.replace("รายละเอียด:", "").strip()
-
-                    # บันทึกลงฐานข้อมูล Neon.tech
+                    
+                    # --- บันทึกลงฐานข้อมูล Neon.tech แบบออนไลน์ ---
                     if DB_URL:
                         conn = get_db_connection()
                         c = conn.cursor()
@@ -67,35 +65,35 @@ def webhook():
                         conn.commit()
                         c.close()
                         conn.close()
-                        print(f"✅ บันทึกลง Database สำเร็จ: {branch}")
-
+                        print(f"✅ บันทึกลง Cloud Database สำเร็จ: {branch}")
+                    
     return "OK"
 
 @app.route("/download")
 def download_file():
     if not DB_URL:
         return "❌ ขาดการเชื่อมต่อ Database"
-
+        
     conn = get_db_connection()
     c = conn.cursor()
     c.execute("SELECT timestamp, branch, status, detail FROM reports ORDER BY id ASC")
     rows = c.fetchall()
     c.close()
     conn.close()
-
-    # สร้างไฟล์ Excel
+    
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Report"
+    
     ws.append(["วันที่-เวลา", "สาขา", "สถานะ", "รายละเอียด"])
-
+    
     for row in rows:
         ws.append(row)
-
+        
     out = io.BytesIO()
     wb.save(out)
     out.seek(0)
-
+    
     return send_file(out, as_attachment=True, download_name="LP_Report_Cloud.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 if __name__ == "__main__":
